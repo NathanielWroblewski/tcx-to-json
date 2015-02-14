@@ -12,9 +12,9 @@ var ELEMENTS = {
   intensity:           tag('Intensity'),
   latitudeDegrees:     tag('LatitudeDegrees'),
   longitudeDegrees:    tag('LongitudeDegrees'),
-  heartRateBpm:        tag('HeartRateBpm'),
-  averageHeartRateBpm: tag('AverageHeartRateBpm'),
-  maximumHeartRateBpm: tag('MaximumHeartRateBpm'),
+  heartRateBpm:        openingTag('HeartRateBpm'),
+  averageHeartRateBpm: openingTag('AverageHeartRateBpm'),
+  maximumHeartRateBpm: openingTag('MaximumHeartRateBpm'),
   triggerMethod:       tag('TriggerMethod'),
   speed:               tag('Speed'),
   runCadence:          tag('RunCadence'),
@@ -33,7 +33,10 @@ var ELEMENTS = {
  * @return <RegExp>
  **/
 function tag(element) {
-  return new RegExp('\<' + element + '\>(.*)(\<\/' + element + '\>)?')
+  return new RegExp('\<' + element + '\>(.*(?=\<))\<\/' + element + '\>')
+}
+function openingTag(element) {
+  return new RegExp('\<' + element + '\>')
 }
 
 /**
@@ -93,13 +96,13 @@ var parser = {
   _parseLine: function(attrs) {
     var match = attrs.text.match(attrs.pattern, '/1')
 
-    if (!match || !match[1]) return false
+    if (!match) return false
 
     this._checkParentElements(attrs.element)
 
     if (attrs.element === 'value') {
       this._pushParentValue(match[1])
-    } else {
+    } else if (match[1]) {
       this._addResult(attrs.element, match[1])
     }
 
@@ -152,7 +155,7 @@ var parser = {
 
    // _print() logs the JSON stored in state to STDOUT
   _print: function() {
-    console.log(JSON.stringify(this.state.results))
+    console.log(JSON.stringify(this.state.results, null, 2))
   }
 }
 
